@@ -27,31 +27,19 @@
   },
   "Ultrasonic": {
     "smallrange": {
-      "fov": [
-        70,
-        35
-      ],
-      "min_resolution": 256,
-      "min_distance": 0.15,
-      "max_distance": 2.5
+      "resolution ": 256,
+      "min_distance ": 0.15,
+      "max_distance ": 2.5
     },
     "midrange": {
-      "fov": [
-        70,
-        35
-      ],
-      "min_resolution": 256,
-      "min_distance": 0.15,
-      "max_distance": 4.5
+      "resolution ": 256,
+      "min_distance ": 0.15,
+      "max_distance ": 4.5
     },
     "largerange": {
-      "fov": [
-        70,
-        35
-      ],
-      "min_resolution": 256,
-      "min_distance": 0.15,
-      "max_distance": 5.5
+      "resolution ": 256,
+      "min_distance ": 0.15,
+      "max_distance ": 5.5
     }
   }
 }

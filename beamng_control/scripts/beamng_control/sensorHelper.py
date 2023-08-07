@@ -66,13 +66,17 @@ def get_imu(position=None, node=None, **spec):
     return imu
 
 
-def get_ultrasonic(position, rotation, **spec):
+def get_ultrasonic(name, bng, vehicle, position, rotation, **spec):
     spec['near_far'] = (spec.pop('min_distance'),
                         spec.pop('max_distance'))
     try:
-        us = bng_sensors.Ultrasonic(position,
-                                    rotation,
-                                    **spec)
+        us = bng_sensors.Ultrasonic(
+            name=name,
+            bng=bng,
+            vehicle=vehicle,
+            pos=position,
+            dir=rotation,
+            **spec)
     except TypeError as e:
         raise SensorSpecificationError('Could not get ultrasonic sensor '
                                        'instance, the json specification '

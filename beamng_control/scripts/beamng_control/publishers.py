@@ -177,7 +177,7 @@ class UltrasonicPublisher(SensorDataPublisher):
                          bng_msgs.USSensor)
 
     def _make_msg(self):
-        data = self._sensor.data
+        data = self._sensor.poll()
         msg = bng_msgs.USSensor()
         msg.distance = data['distance']
         return msg
