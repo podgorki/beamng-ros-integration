@@ -28,19 +28,19 @@
   },
   "Ultrasonic": {
     "smallrange": {
-      "resolution ": 256,
-      "min_distance ": 0.15,
-      "max_distance ": 2.5
+      "resolution": 256,
+      "min_distance": 0.15,
+      "max_distance": 2.5
     },
     "midrange": {
-      "resolution ": 256,
-      "min_distance ": 0.15,
-      "max_distance ": 4.5
+      "resolution": 256,
+      "min_distance": 0.15,
+      "max_distance": 4.5
     },
     "largerange": {
-      "resolution ": 256,
-      "min_distance ": 0.15,
-      "max_distance ": 5.5
+      "resolution": 256,
+      "min_distance": 0.15,
+      "max_distance": 5.5
     }
   }
 }
