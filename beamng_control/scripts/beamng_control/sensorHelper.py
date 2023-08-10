@@ -67,7 +67,7 @@ def get_imu(position=None, node=None, **spec):
 
 
 def get_ultrasonic(name, bng, vehicle, position, rotation, **spec):
-    spec['near_far'] = (spec.pop('min_distance'),
+    spec['near_far_planes'] = (spec.pop('min_distance'),
                         spec.pop('max_distance'))
     try:
         us = bng_sensors.Ultrasonic(
