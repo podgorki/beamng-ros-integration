@@ -271,7 +271,28 @@ class ElectricsPublisher(SensorDataPublisher):
         return msg
 
 
-class ColorImgPublisher(SensorDataPublisher):
+class CameraDataPublisher:
+
+    def __init__(self, sensor, topic_id, msg_type):
+        rospy.logdebug(f'publishing to {topic_id}')
+        self._sensor = sensor
+        self._pub = rospy.Publisher(topic_id,
+                                    msg_type,
+                                    queue_size=1)
+        self.current_time = rospy.get_rostime()
+        self.frame_map = 'map'
+
+    @abstractmethod
+    def _make_msg(self, data):
+        pass
+
+    def publish(self, current_time, data):
+        self.current_time = current_time
+        msg = self._make_msg(data)
+        self._pub.publish(msg)
+
+
+class ColorImgPublisher(CameraDataPublisher):
 
     def __init__(self, sensor, topic_id, cv_helper, data_descriptor):
         super().__init__(sensor,
@@ -280,11 +301,13 @@ class ColorImgPublisher(SensorDataPublisher):
         self._cv_helper = cv_helper
         self._data_descriptor = data_descriptor
 
-    def _make_msg(self):
-        data = self._sensor.poll()
-        img = data['colour']
-        img = np.array(img)[:, :, :3]
-        img = img[:, :, ::-1].copy()
+    def _make_msg(self, data):
+        img = data[self._data_descriptor]
+        if img is not None:
+            img = np.array(img.convert('RGB'))
+            img = img[:, :, ::-1].copy()
+        else:
+            img = np.zeros_like(data['colour'].convert('RGB'))
         try:
             img = self._cv_helper.cv2_to_imgmsg(img, 'bgr8')
         except CvBridgeError as e:
@@ -292,7 +315,7 @@ class ColorImgPublisher(SensorDataPublisher):
         return img
 
 
-class DepthImgPublisher(SensorDataPublisher):
+class DepthImgPublisher(CameraDataPublisher):
 
     def __init__(self, sensor, topic_id, cv_helper):
         super().__init__(sensor,
@@ -300,8 +323,7 @@ class DepthImgPublisher(SensorDataPublisher):
                          sensor_msgs.msg.Image)
         self._cv_helper = cv_helper
 
-    def _make_msg(self):
-        data = self._sensor.poll()
+    def _make_msg(self, data):
         img = data['depth']
         near, far = self._sensor.near_far_planes
         img = (np.array(img) - near) / far * 255
@@ -313,7 +335,7 @@ class DepthImgPublisher(SensorDataPublisher):
         return img
 
 
-class BBoxImgPublisher(SensorDataPublisher):
+class BBoxImgPublisher(CameraDataPublisher):
 
     def __init__(self, sensor, topic_id, cv_helper, vehicle):
         super().__init__(sensor,
@@ -323,11 +345,10 @@ class BBoxImgPublisher(SensorDataPublisher):
         self._vehicle = vehicle
         self._classes = None
 
-    def _update_data_with_bbox(self):
+    def _update_data_with_bbox(self, data):
         if self._classes is None:
             annotations = self._vehicle.bng.get_annotations()
             self._classes = self._vehicle.bng.get_annotation_classes(annotations)
-        data = self._sensor.data
         bboxes = bng_sensors.Camera.extract_bboxes(data['annotation'],
                                                    data['instance'],
                                                    self._classes)
@@ -338,8 +359,8 @@ class BBoxImgPublisher(SensorDataPublisher):
                                                   width=3)
         return bbox_img
 
-    def _make_msg(self):
-        img = self._update_data_with_bbox()
+    def _make_msg(self, data):
+        img = self._update_data_with_bbox(data)
         img = img.convert('RGB')
         img = np.array(img)
         img = img[:, :, ::-1].copy()
@@ -357,7 +378,7 @@ class CameraPublisher(BNGPublisher):
         self._cv_helper = CvBridge()
         self._publishers = list()
         if self._sensor.is_render_colours:
-            color_topic = '/'.join([topic_id, 'color'])
+            color_topic = '/'.join([topic_id, 'colour'])
             pub = ColorImgPublisher(sensor,
                                     color_topic,
                                     self._cv_helper,
@@ -392,9 +413,13 @@ class CameraPublisher(BNGPublisher):
             self._publishers.append(pub)
 
     def publish(self, current_time):
+        if self._sensor.is_render_instance:
+            data = self._sensor.get_full_poll_request()
+        else:
+            data = self._sensor.poll()
         for pub in self._publishers:
             pub.current_time = current_time
-            pub.publish(current_time)
+            pub.publish(current_time, data)
 
 
 class LidarPublisher(SensorDataPublisher):
